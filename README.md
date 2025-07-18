@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+# AMS Auth UI
+
+A modern authentication UI for Apartment Management System (AMS), built with Next.js, React, TypeScript, and SCSS. Includes registration, login, user/admin dashboards, and common header/footer.
+
+## Features
+- Registration and login forms
+- Phone number input with country selector
+- User and admin dashboard pages
+- Common header with logo, contact email, and phone
+- Footer with copyright
+- Axios integration for registration POST
+- Responsive, clean design
+- Environment-based API URL (development/production)
 
 ## Getting Started
 
-First, run the development server:
-
+Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Run the development server:
+```bash
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment
+- Development API: `http://127.0.0.1:8000`
+- Production API: Change in `src/app/register/page.tsx` as needed
 
-## Learn More
+## Folder Structure
+- `src/app/register/page.tsx` — Registration page
+- `src/app/login/page.tsx` — Login page
+- `src/app/admin/page.tsx` — Admin dashboard
+- `src/app/user/page.tsx` — User dashboard
+- `src/app/components/Header.tsx` — Common header
+- `src/app/components/Footer.tsx` — Common footer
+- `src/constants/formData.ts` — Form data types/constants
+- `public/apartment-logo.svg` — Logo
 
-To learn more about Next.js, take a look at the following resources:
+## Customization
+- Update contact info in `Header.tsx`
+- Update logo in `public/apartment-logo.svg`
+- Adjust styles in SCSS/CSS files
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
+Push only source code/config files. Do not commit `node_modules` or build output.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+MIT
