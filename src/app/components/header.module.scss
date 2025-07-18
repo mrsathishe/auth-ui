@@ -1,0 +1,23 @@
+.header {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.header .text-blue-700 {
+  color: #2563eb;
+}
+
+.header svg {
+  vertical-align: middle;
+}
+
+.header .mr-2 {
+  margin-right: 0.5rem;
+}
+
+.header .mr-3 {
+  margin-right: 0.75rem;
+}
