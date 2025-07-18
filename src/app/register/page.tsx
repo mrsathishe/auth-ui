@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import axios from "axios";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import "../style.scss";
@@ -24,7 +25,11 @@ export default function RegisterPage() {
   const handlePhoneChange = (value: string | undefined) => {
     setFormData((prevData) => ({ ...prevData, phoneNumber: value || "" }));
   };
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const SERVICE_URL = process.env.NODE_ENV === "development"
+    ? "http://127.0.0.1:8000"
+    : "https://your-production-url.com";
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const errors: FormErrors = {};
     if (!formData.username) errors.username = "Username is required";
@@ -38,8 +43,16 @@ export default function RegisterPage() {
       errors.buildingName = "Building Name is required";
     setFormErrors(errors);
     if (Object.keys(errors).length === 0) {
-      console.log("Registration Data Submitted:", formData);
-      alert("Registration Successful!");
+      try {
+        const response = await axios.post(`${SERVICE_URL}/register`, formData);
+        if (response.status === 200) {
+          alert("Registration Successful!");
+        } else {
+          alert("Registration failed. Please try again.");
+        }
+      } catch (error: any) {
+        alert(error?.response?.data?.message || "Registration failed. Please try again.");
+      }
     }
   };
   return (
@@ -147,7 +160,7 @@ export default function RegisterPage() {
                 value={formData.phoneNumber}
                 onChange={handlePhoneChange}
                 className="phoneInputContainer"
-                maxLength={14}
+                maxLength={15}
               />
               {formErrors.phoneNumber && (
                 <p className="text-sm text-red-600">{formErrors.phoneNumber}</p>
