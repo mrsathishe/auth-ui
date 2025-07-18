@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+// import Image from "next/image";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import "../style.scss";
@@ -12,7 +12,8 @@ export default function LoginPage() {
     password: "",
   });
 
-  const [formErrors, setFormErrors] = useState({});
+  type FormErrors = { username?: string; password?: string };
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

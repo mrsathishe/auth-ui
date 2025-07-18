@@ -1,13 +1,12 @@
 import React from "react";
 import Image from "next/image";
-import styles from "./header.module.scss";
 
 export default function Header() {
   return (
     <header className="header flex items-center justify-between px-8 py-4 bg-white shadow-md w-full">
       <div className="flex items-center">
         <Image
-          src="/public/apartment-logo.png"
+          src="/apartment-logo.svg"
           alt="Apartment Logo"
           width={40}
           height={40}

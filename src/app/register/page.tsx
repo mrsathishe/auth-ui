@@ -15,7 +15,9 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
@@ -32,7 +34,8 @@ export default function RegisterPage() {
     if (!formData.idNumber) errors.idNumber = "ID Number is required";
     if (!formData.name) errors.name = "Name is required";
     if (!formData.flatNumber) errors.flatNumber = "Flat Number is required";
-    if (!formData.buildingName) errors.buildingName = "Building Name is required";
+    if (!formData.buildingName)
+      errors.buildingName = "Building Name is required";
     setFormErrors(errors);
     if (Object.keys(errors).length === 0) {
       console.log("Registration Data Submitted:", formData);
@@ -76,7 +79,9 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-6 w-full">
             {/* Full Name at the top */}
             <div>
-              <label className="block text-gray-700 text-sm mb-1">Full Name</label>
+              <label className="block text-gray-700 text-sm mb-1">
+                Full Name
+              </label>
               <input
                 type="text"
                 name="name"
@@ -89,7 +94,9 @@ export default function RegisterPage() {
               )}
             </div>
             <div>
-              <label className="block text-gray-700 text-sm mb-1">Username</label>
+              <label className="block text-gray-700 text-sm mb-1">
+                Username
+              </label>
               <input
                 type="text"
                 name="username"
@@ -115,7 +122,9 @@ export default function RegisterPage() {
               )}
             </div>
             <div>
-              <label className="block text-gray-700 text-sm mb-1">Password</label>
+              <label className="block text-gray-700 text-sm mb-1">
+                Password
+              </label>
               <input
                 type="password"
                 name="password"
@@ -138,7 +147,7 @@ export default function RegisterPage() {
                 value={formData.phoneNumber}
                 onChange={handlePhoneChange}
                 className="phoneInputContainer"
-                maxLength={10}
+                maxLength={14}
               />
               {formErrors.phoneNumber && (
                 <p className="text-sm text-red-600">{formErrors.phoneNumber}</p>
@@ -147,7 +156,9 @@ export default function RegisterPage() {
 
             {/* Flat Number dropdown */}
             <div>
-              <label className="block text-gray-700 text-sm mb-1">Flat Number</label>
+              <label className="block text-gray-700 text-sm mb-1">
+                Flat Number
+              </label>
               <select
                 name="flatNumber"
                 value={formData.flatNumber}
@@ -193,7 +204,9 @@ export default function RegisterPage() {
                 <option value="mp_livit">MP Livit</option>
               </select>
               {formErrors.buildingName && (
-                <p className="text-sm text-red-600">{formErrors.buildingName}</p>
+                <p className="text-sm text-red-600">
+                  {formErrors.buildingName}
+                </p>
               )}
             </div>
 
@@ -211,3 +224,4 @@ export default function RegisterPage() {
       <Footer />
     </>
   );
+}

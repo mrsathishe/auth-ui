@@ -23,16 +23,18 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: calc(100vh - 128px);
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-/* src/app/globals.css */
 
-/* This is a common dark mode configuration */
 :root {
   color-scheme: dark;
 }
 
 body {
-  color: #467bf5; /* <--- This is likely the culprit */
-  background: black;
+  color: var(--foreground);
+  background: var(--background);
 }
