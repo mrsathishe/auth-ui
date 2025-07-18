@@ -12,7 +12,9 @@ export default function UserPage() {
           <h2 className="text-3xl font-extrabold text-gray-800 mb-8 text-center">
             User Dashboard
           </h2>
-          <p className="text-gray-700 text-lg">Welcome, User! This is your dashboard.</p>
+          <p className="text-gray-700 text-lg">
+            Welcome, User! This is your dashboard.
+          </p>
         </div>
       </div>
       <Footer />

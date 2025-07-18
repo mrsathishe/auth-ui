@@ -82,7 +82,9 @@ export default function LoginPage() {
               )}
             </div>
             <div>
-              <label className="block text-gray-700 text-sm mb-1">Password</label>
+              <label className="block text-gray-700 text-sm mb-1">
+                Password
+              </label>
               <input
                 type="password"
                 name="password"

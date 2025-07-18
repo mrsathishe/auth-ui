@@ -11,7 +11,9 @@ export default function AdminPage() {
           <h2 className="text-3xl font-extrabold text-gray-800 mb-8 text-center">
             Admin Dashboard
           </h2>
-          <p className="text-gray-700 text-lg">Welcome, Admin! This is your dashboard.</p>
+          <p className="text-gray-700 text-lg">
+            Welcome, Admin! This is your dashboard.
+          </p>
         </div>
       </div>
       <Footer />
