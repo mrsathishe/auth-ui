@@ -1,0 +1,63 @@
+{
+  "register": {
+    "heading": "Registration",
+    "title": "Create an account",
+    "tabs": {
+      "login": "Login",
+      "register": "Register"
+    },
+    "fields": {
+      "full_name": "Full Name",
+      "username": "Username",
+      "email": "Email",
+      "password": "Password",
+      "phone_number": "Phone Number",
+      "flat_number": "Flat Number",
+      "flat_number_select": "Select a flat number",
+      "building_name": "Building Name",
+      "building_select": "Select a building"
+    },
+    "button": "Register",
+    "password_note": "Password must be at least 8 characters, contain one lowercase, one uppercase, one symbol, and one number.",
+    "messages": {
+      "success": "Registration successful!",
+      "error": "Registration failed. Please try again.",
+      "email_exists": "Email already registered"
+    },
+    "validation": {
+      "full_name_required": "Full name is required.",
+      "username_required": "Username is required.",
+      "email_required": "Email is required.",
+      "email_invalid": "Invalid email address.",
+      "password_required": "Password is required.",
+      "password_length": "Password must be at least 8 characters.",
+      "password_lower": "Password must contain a lowercase letter.",
+      "password_upper": "Password must contain an uppercase letter.",
+      "password_number": "Password must contain a number.",
+      "password_symbol": "Password must contain a symbol.",
+      "phone_required": "Phone number is required.",
+      "flat_required": "Flat number is required.",
+      "building_required": "Building name is required."
+    }
+  },
+  "login": {
+    "heading": "Login",
+    "title": "Login to your account",
+    "fields": {
+      "username_label": "Username/Email",
+      "password_label": "Password"
+    },
+    "button": "Login",
+    "validation": {
+      "username_required": "Username/Email is required",
+      "password_required": "Password is required"
+    },
+    "messages": {
+      "success": "Login Successful!"
+    },
+    "tabs": {
+      "login": "Login",
+      "register": "Register"
+    }
+  }
+}

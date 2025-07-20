@@ -3,6 +3,11 @@
 import { useState } from "react";
 // import Image from "next/image";
 import Header from "../components/Header";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import en from "@/locales/local.en.json";
+import { loginUser } from "../helpers/api";
+// import { showAlert } from "../helpers/api";
 import Footer from "../components/Footer";
 import "../style.scss";
 
@@ -23,12 +28,27 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const errors: { username?: string; password?: string } = {};
-    if (!formData.username) errors.username = "Username/Email is required";
-    if (!formData.password) errors.password = "Password is required";
+    if (!formData.username)
+      errors.username = en.login.validation.username_required;
+    if (!formData.password)
+      errors.password = en.login.validation.password_required;
     setFormErrors(errors);
     if (Object.keys(errors).length === 0) {
-      console.log("Login Data Submitted:", formData);
-      alert("Login Successful!");
+      // Connect to backend API for login
+      loginUser(formData.username, formData.password)
+        .then((response) => {
+          const result = response.data;
+          if (result.code === 200 && result.status === "success") {
+            toast.success(result.message || en.login.messages.success);
+          } else if (result.code === 401 && result.status === "error") {
+            toast.error(result.message || "Invalid credentials");
+          } else {
+            toast.error("Login failed. Please try again.");
+          }
+        })
+        .catch(() => {
+          toast.error("Login failed. Please try again.");
+        });
     }
   };
 
@@ -48,7 +68,7 @@ export default function LoginPage() {
                 borderRight: "1px solid #e5e7eb",
               }}
             >
-              Login
+              {en.login.tabs.login}
             </a>
             <a
               href="/register"
@@ -58,18 +78,18 @@ export default function LoginPage() {
                 color: "#2563eb",
               }}
             >
-              Register
+              {en.login.tabs.register}
             </a>
           </div>
         </div>
         <div className="rounded-3xl bg-white shadow-xl p-8 md:p-12 w-full max-w-lg">
           <h2 className="text-3xl font-extrabold text-gray-800 mb-8 text-center">
-            Login to your account
+            {en.login.title}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-6 w-full">
             <div>
               <label className="block text-gray-700 text-sm mb-1">
-                Username/Email
+                {en.login.fields.username_label}
               </label>
               <input
                 type="text"
@@ -84,7 +104,7 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="block text-gray-700 text-sm mb-1">
-                Password
+                {en.login.fields.password_label}
               </label>
               <input
                 type="password"
@@ -102,12 +122,23 @@ export default function LoginPage() {
                 type="submit"
                 className="w-48 py-3 bg-blue-600 text-white font-semibold rounded-full shadow-lg transition-colors hover:bg-blue-700"
               >
-                Login
+                {en.login.button}
               </button>
             </div>
           </form>
         </div>
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <Footer />
     </>
   );

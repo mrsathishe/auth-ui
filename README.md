@@ -1,9 +1,9 @@
-
 # AMS Auth UI
 
 A modern authentication UI for Apartment Management System (AMS), built with Next.js, React, TypeScript, and SCSS. Includes registration, login, user/admin dashboards, and common header/footer.
 
 ## Features
+
 - Registration and login forms
 - Phone number input with country selector
 - User and admin dashboard pages
@@ -16,11 +16,13 @@ A modern authentication UI for Apartment Management System (AMS), built with Nex
 ## Getting Started
 
 Install dependencies:
+
 ```bash
 npm install
 ```
 
 Run the development server:
+
 ```bash
 npm run dev
 ```
@@ -28,10 +30,12 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Environment
+
 - Development API: `http://127.0.0.1:8000`
 - Production API: Change in `src/app/register/page.tsx` as needed
 
 ## Folder Structure
+
 - `src/app/register/page.tsx` — Registration page
 - `src/app/login/page.tsx` — Login page
 - `src/app/admin/page.tsx` — Admin dashboard
@@ -42,12 +46,15 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - `public/apartment-logo.svg` — Logo
 
 ## Customization
+
 - Update contact info in `Header.tsx`
 - Update logo in `public/apartment-logo.svg`
 - Adjust styles in SCSS/CSS files
 
 ## Deployment
+
 Push only source code/config files. Do not commit `node_modules` or build output.
 
 ## License
+
 MIT

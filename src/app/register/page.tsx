@@ -1,89 +1,110 @@
 "use client";
 
 import { useState } from "react";
-import axios from "axios";
+// import axios from "axios";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import "../style.scss";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { FormData, initialFormData } from "@/constants/formData";
+import { registerUser } from "../helpers/api";
+import en from "@/locales/local.en.json";
+// import { NotificationContainer } from "react-notifications";
 
 type FormErrors = Partial<Record<keyof FormData, string>>;
 
 export default function RegisterPage() {
+  // State and handlers for the registration form
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-  };
-  const handlePhoneChange = (value: string | undefined) => {
-    setFormData((prevData) => ({ ...prevData, phoneNumber: value || "" }));
-  };
-  const SERVICE_URL = process.env.NODE_ENV === "development"
-    ? "http://127.0.0.1:8000"
-    : "https://your-production-url.com";
-
-  // Password strength and validation
   const [passwordStrength, setPasswordStrength] = useState(0);
-  const [passwordNote, setPasswordNote] = useState("");
 
   function validatePassword(password: string) {
     let strength = 0;
-    let note = "";
     if (password.length >= 8) strength++;
-    else note = "Password must be at least 8 characters.";
     if (/[a-z]/.test(password)) strength++;
-    else note = "Password must contain a lowercase letter.";
     if (/[A-Z]/.test(password)) strength++;
-    else note = "Password must contain an uppercase letter.";
+    if (/\d/.test(password)) strength++;
     if (/[^A-Za-z0-9]/.test(password)) strength++;
-    else note = "Password must contain a symbol.";
-    if (/[0-9]/.test(password)) strength++;
-    else note = "Password must contain a number.";
     setPasswordStrength(strength);
-    setPasswordNote(note);
-    return strength === 5;
   }
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormErrors((prev) => ({ ...prev, [name]: undefined }));
+    if (name === "password") validatePassword(value);
+  }
+
+  function handlePhoneChange(value: string | undefined) {
+    setFormData((prev) => ({ ...prev, phoneNumber: value || "" }));
+    setFormErrors((prev) => ({ ...prev, phoneNumber: undefined }));
+  }
+
+  function validateForm(data: FormData): FormErrors {
     const errors: FormErrors = {};
-    if (!formData.username) errors.username = "Username is required";
-    if (!formData.password) errors.password = "Password is required";
-    else if (!validatePassword(formData.password)) errors.password = passwordNote || "Password does not meet requirements.";
-    if (!formData.email) errors.email = "Email is required";
-    else if (!/^\S+@\S+\.\S+$/.test(formData.email)) errors.email = "Enter a valid email address.";
-    if (!formData.phoneNumber) errors.phoneNumber = "Phone Number is required";
-    if (!formData.idNumber) errors.idNumber = "ID Number is required";
-    if (!formData.name) errors.name = "Name is required";
-    if (!formData.flatNumber) errors.flatNumber = "Flat Number is required";
-    if (!formData.buildingName)
-      errors.buildingName = "Building Name is required";
-    setFormErrors(errors);
-    if (Object.keys(errors).length === 0) {
-      try {
-        const response = await axios.post(`${SERVICE_URL}/register`, formData);
-        if (response.status === 200) {
-          alert("Registration Successful!");
-        } else {
-          alert("Registration failed. Please try again.");
-        }
-      } catch (error: any) {
-        alert(error?.response?.data?.message || "Registration failed. Please try again.");
-      }
+    if (!data.name.trim())
+      errors.name = en.register.validation.full_name_required;
+    if (!data.username.trim())
+      errors.username = en.register.validation.username_required;
+    if (!data.email.trim())
+      errors.email = en.register.validation.email_required;
+    else if (!/^\S+@\S+\.\S+$/.test(data.email))
+      errors.email = en.register.validation.email_invalid;
+    if (!data.password)
+      errors.password = en.register.validation.password_required;
+    else {
+      if (data.password.length < 8)
+        errors.password = en.register.validation.password_length;
+      else if (!/[a-z]/.test(data.password))
+        errors.password = en.register.validation.password_lower;
+      else if (!/[A-Z]/.test(data.password))
+        errors.password = en.register.validation.password_upper;
+      else if (!/\d/.test(data.password))
+        errors.password = en.register.validation.password_number;
+      else if (!/[^A-Za-z0-9]/.test(data.password))
+        errors.password = en.register.validation.password_symbol;
     }
-  };
+    if (!data.phoneNumber)
+      errors.phoneNumber = en.register.validation.phone_required;
+    if (!data.flatNumber)
+      errors.flatNumber = en.register.validation.flat_required;
+    if (!data.buildingName)
+      errors.buildingName = en.register.validation.building_required;
+    return errors;
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const errors = validateForm(formData);
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+    try {
+      const result = await registerUser(formData);
+      if (result.code === 201 && result.status === "success") {
+        toast.success(result.message || en.register.messages.success);
+        setFormData(initialFormData);
+        setPasswordStrength(0);
+      } else if (result.code === 409 && result.status === "error") {
+        toast.error(result.message || en.register.messages.email_exists);
+      } else {
+        toast.error(en.register.messages.error);
+      }
+    } catch {
+      toast.error("Registration failed. Please try again.");
+    }
+  }
+
   return (
     <>
       <Header />
       <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-8">
-        {/* Tabs at the top center */}
         <div className="flex justify-center mb-8 w-full">
           <div className="border border-gray-300 rounded-full overflow-hidden flex text-sm bg-gray-100">
             <a
@@ -95,7 +116,7 @@ export default function RegisterPage() {
                 borderRight: "1px solid #e5e7eb",
               }}
             >
-              Login
+              {en.register.tabs.login}
             </a>
             <a
               href="/register"
@@ -105,54 +126,62 @@ export default function RegisterPage() {
                 color: "white",
               }}
             >
-              Register
+              {en.register.tabs.register}
             </a>
           </div>
         </div>
         <div className="rounded-3xl bg-white shadow-xl p-8 md:p-12 w-full max-w-lg">
           <h2 className="text-3xl font-extrabold text-gray-800 mb-8 text-center">
-            Create an account
+            {en.register.title}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-6 w-full">
-            {/* Full Name at the top */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">
-                Full Name
+                {en.register.fields.full_name}
               </label>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border-2 border-blue-600 rounded-md"
+                className={`w-full px-4 py-2 border-2 rounded-md ${
+                  formErrors.name ? "border-red-600" : "border-blue-600"
+                }`}
               />
               {formErrors.name && (
                 <p className="text-sm text-red-600">{formErrors.name}</p>
               )}
+              {/* NotificationContainer removed, ToastContainer added below */}
             </div>
             <div>
               <label className="block text-gray-700 text-sm mb-1">
-                Username
+                {en.register.fields.username}
               </label>
               <input
                 type="text"
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border-2 border-blue-600 rounded-md"
+                className={`w-full px-4 py-2 border-2 rounded-md ${
+                  formErrors.username ? "border-red-600" : "border-blue-600"
+                }`}
               />
               {formErrors.username && (
                 <p className="text-sm text-red-600">{formErrors.username}</p>
               )}
             </div>
             <div>
-              <label className="block text-gray-700 text-sm mb-1">Email</label>
+              <label className="block text-gray-700 text-sm mb-1">
+                {en.register.fields.email}
+              </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border-2 rounded-md ${formErrors.email ? 'border-red-600' : 'border-blue-600'}`}
+                className={`w-full px-4 py-2 border-2 rounded-md ${
+                  formErrors.email ? "border-red-600" : "border-blue-600"
+                }`}
               />
               {formErrors.email && (
                 <p className="text-sm text-red-600">{formErrors.email}</p>
@@ -160,30 +189,44 @@ export default function RegisterPage() {
             </div>
             <div>
               <label className="block text-gray-700 text-sm mb-1">
-                Password
+                {en.register.fields.password}
               </label>
               <input
                 type="password"
                 name="password"
                 value={formData.password}
-                onChange={e => { handleChange(e); validatePassword(e.target.value); }}
-                className={`w-full px-4 py-2 border-2 rounded-md ${formErrors.password ? 'border-red-600' : 'border-blue-600'}`}
+                onChange={(e) => {
+                  handleChange(e);
+                  validatePassword(e.target.value);
+                }}
+                className={`w-full px-4 py-2 border-2 rounded-md ${
+                  formErrors.password ? "border-red-600" : "border-blue-600"
+                }`}
               />
               <div className="w-full h-2 bg-gray-200 rounded-full mt-2 mb-1">
                 <div
                   style={{ width: `${(passwordStrength / 5) * 100}%` }}
-                  className={`h-2 rounded-full ${passwordStrength <= 2 ? 'bg-red-500' : passwordStrength === 3 ? 'bg-yellow-500' : passwordStrength === 4 ? 'bg-blue-500' : 'bg-green-500'}`}
+                  className={`h-2 rounded-full ${
+                    passwordStrength <= 2
+                      ? "bg-red-500"
+                      : passwordStrength === 3
+                      ? "bg-yellow-500"
+                      : passwordStrength === 4
+                      ? "bg-blue-500"
+                      : "bg-green-500"
+                  }`}
                 ></div>
               </div>
-              <p className="text-xs text-gray-600 mb-1">Password must be at least 8 characters, contain one lowercase, one uppercase, one symbol, and one number.</p>
+              <p className="text-xs text-gray-600 mb-1">
+                {en.register.password_note}
+              </p>
               {formErrors.password && (
                 <p className="text-sm text-red-600">{formErrors.password}</p>
               )}
             </div>
-            {/* Phone Number Input with Country Selector - Styled via globals.css */}
             <div>
               <label className="block text-gray-700 text-sm mb-1">
-                Phone Number
+                {en.register.fields.phone_number}
               </label>
               <PhoneInput
                 international
@@ -195,22 +238,20 @@ export default function RegisterPage() {
               />
               {formErrors.phoneNumber && (
                 <p className="text-sm text-red-600">{formErrors.phoneNumber}</p>
-            <div>
-              <label className="block text-gray-700 text-sm mb-1">
-                Username
-              </label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border-2 rounded-md ${formErrors.username ? 'border-red-600' : 'border-blue-600'}`}
-              />
-              {formErrors.username && (
-                <p className="text-sm text-red-600">{formErrors.username}</p>
               )}
             </div>
-                  Select a flat number
+            <div>
+              <label className="block text-gray-700 text-sm mb-1">
+                {en.register.fields.flat_number}
+              </label>
+              <select
+                name="flatNumber"
+                value={formData.flatNumber}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border-2 border-blue-600 rounded-md"
+              >
+                <option value="" disabled>
+                  {en.register.fields.flat_number_select}
                 </option>
                 <optgroup label="Ground Floor">
                   <option value="G1">G1</option>
@@ -228,21 +269,20 @@ export default function RegisterPage() {
               </select>
               {formErrors.flatNumber && (
                 <p className="text-sm text-red-600">{formErrors.flatNumber}</p>
-            <div>
-              <label className="block text-gray-700 text-sm mb-1">
-                Full Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border-2 rounded-md ${formErrors.name ? 'border-red-600' : 'border-blue-600'}`}
-              />
-              {formErrors.name && (
-                <p className="text-sm text-red-600">{formErrors.name}</p>
               )}
             </div>
+            <div>
+              <label className="block text-gray-700 text-sm mb-1">
+                {en.register.fields.building_name}
+              </label>
+              <select
+                name="buildingName"
+                value={formData.buildingName}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border-2 border-blue-600 rounded-md"
+              >
+                <option value="" disabled>
+                  {en.register.fields.building_select}
                 </option>
                 <option value="mp_milan">MP Milan</option>
                 <option value="mp_livit">MP Livit</option>
@@ -253,18 +293,28 @@ export default function RegisterPage() {
                 </p>
               )}
             </div>
-
             <div className="flex justify-end">
               <button
                 type="submit"
                 className="w-48 py-3 bg-blue-600 text-white font-semibold rounded-full shadow-lg transition-colors hover:bg-blue-700"
               >
-                Register
+                {en.register.button}
               </button>
             </div>
           </form>
         </div>
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <Footer />
     </>
   );
