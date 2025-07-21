@@ -1,17 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 // import Image from "next/image";
 import Header from "../components/Header";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import en from "@/locales/local.en.json";
 import { loginUser } from "../helpers/api";
+import {
+  storeAuthCache,
+  getAuthCache,
+  isAuthenticated,
+} from "../helpers/authCache";
 // import { showAlert } from "../helpers/api";
 import Footer from "../components/Footer";
+import SearchParamsWrapper from "../components/SearchParamsWrapper";
+import { AuthStatus } from "../components/AuthStatus";
 import "../style.scss";
 
-export default function LoginPage() {
+interface LoginFormProps {
+  callbackUrl: string;
+  forceLogin?: boolean;
+}
+
+function LoginForm({ callbackUrl, forceLogin = false }: LoginFormProps) {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -19,6 +31,33 @@ export default function LoginPage() {
 
   type FormErrors = { username?: string; password?: string };
   const [formErrors, setFormErrors] = useState<FormErrors>({});
+
+  // Check for existing authentication on component mount
+  useEffect(() => {
+    // Skip cache check if force login is requested
+    if (forceLogin) return;
+
+    if (isAuthenticated()) {
+      const cachedAuth = getAuthCache();
+      if (cachedAuth) {
+        toast.success("Already logged in, redirecting...");
+        setTimeout(() => {
+          // Create callback URL with cached auth data
+          const url = new URL(callbackUrl);
+          url.searchParams.set("auth_status", "success");
+          url.searchParams.set("auth_method", "login");
+          url.searchParams.set("timestamp", Date.now().toString());
+          url.searchParams.set("token", cachedAuth.token);
+          url.searchParams.set("token_type", cachedAuth.token_type);
+          url.searchParams.set("expires_in", cachedAuth.expires_in.toString());
+          url.searchParams.set("from_cache", "true"); // Indicate this was from cache
+
+          window.location.href = url.toString();
+        }, 1000);
+        return;
+      }
+    }
+  }, [callbackUrl, forceLogin]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -40,20 +79,92 @@ export default function LoginPage() {
           const result = response.data;
           if (result.code === 200 && result.status === "success") {
             toast.success(result.message || en.login.messages.success);
+
+            // Store authentication data in cache
+            if (result.token) {
+              storeAuthCache({
+                token: result.token,
+                token_type: result.token_type || "bearer",
+                expires_in: result.expires_in || 1800,
+                username: formData.username,
+              });
+            }
+
+            setTimeout(() => {
+              // Add success parameters to the callback URL
+              const url = new URL(callbackUrl);
+              url.searchParams.set("auth_status", "success");
+              url.searchParams.set("auth_method", "login");
+              url.searchParams.set("timestamp", Date.now().toString());
+
+              // Add token information to callback URL
+              if (result.token) {
+                url.searchParams.set("token", result.token);
+              }
+              if (result.token_type) {
+                url.searchParams.set("token_type", result.token_type);
+              }
+              if (result.expires_in) {
+                url.searchParams.set(
+                  "expires_in",
+                  result.expires_in.toString()
+                );
+              }
+
+              window.location.href = url.toString();
+            }, 1200);
           } else if (result.code === 401 && result.status === "error") {
             toast.error(result.message || "Invalid credentials");
+            // Optional: redirect with error status after some delay
+            setTimeout(() => {
+              if (callbackUrl !== "/") {
+                const url = new URL(callbackUrl);
+                url.searchParams.set("auth_status", "error");
+                url.searchParams.set("auth_method", "login");
+                url.searchParams.set("error_code", "401");
+                url.searchParams.set("error_message", "invalid_credentials");
+                url.searchParams.set("timestamp", Date.now().toString());
+                // Uncomment the next line if you want to redirect on error
+                // window.location.href = url.toString();
+              }
+            }, 3000);
           } else {
             toast.error("Login failed. Please try again.");
+            setTimeout(() => {
+              if (callbackUrl !== "/") {
+                const url = new URL(callbackUrl);
+                url.searchParams.set("auth_status", "error");
+                url.searchParams.set("auth_method", "login");
+                url.searchParams.set("error_code", "unknown");
+                url.searchParams.set("error_message", "login_failed");
+                url.searchParams.set("timestamp", Date.now().toString());
+                // Uncomment the next line if you want to redirect on error
+                // window.location.href = url.toString();
+              }
+            }, 3000);
           }
         })
         .catch(() => {
           toast.error("Login failed. Please try again.");
+          setTimeout(() => {
+            if (callbackUrl !== "/") {
+              const url = new URL(callbackUrl);
+              url.searchParams.set("auth_status", "error");
+              url.searchParams.set("auth_method", "login");
+              url.searchParams.set("error_code", "network");
+              url.searchParams.set("error_message", "connection_failed");
+              url.searchParams.set("timestamp", Date.now().toString());
+              // Uncomment the next line if you want to redirect on error
+              // window.location.href = url.toString();
+            }
+          }, 3000);
         });
     }
   };
 
   return (
     <>
+      <AuthStatus />
       <Header />
       <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-8">
         {/* Tabs at the top center */}
@@ -141,5 +252,17 @@ export default function LoginPage() {
       />
       <Footer />
     </>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <SearchParamsWrapper>
+      {(searchParams) => {
+        const callbackUrl = searchParams.get("callback") || "/";
+        const forceLogin = searchParams.get("force") === "true";
+        return <LoginForm callbackUrl={callbackUrl} forceLogin={forceLogin} />;
+      }}
+    </SearchParamsWrapper>
   );
 }

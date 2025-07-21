@@ -7,6 +7,7 @@ import "react-phone-number-input/style.css";
 import "../style.scss";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import SearchParamsWrapper from "../components/SearchParamsWrapper";
 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -17,7 +18,11 @@ import en from "@/locales/local.en.json";
 
 type FormErrors = Partial<Record<keyof FormData, string>>;
 
-export default function RegisterPage() {
+interface RegisterFormProps {
+  callbackUrl: string;
+}
+
+function RegisterForm({ callbackUrl }: RegisterFormProps) {
   // State and handlers for the registration form
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -91,6 +96,21 @@ export default function RegisterPage() {
         toast.success(result.message || en.register.messages.success);
         setFormData(initialFormData);
         setPasswordStrength(0);
+        setTimeout(() => {
+          // Add success parameters to the callback URL
+          const url = new URL(callbackUrl);
+          url.searchParams.set("auth_status", "success");
+          url.searchParams.set("auth_method", "register");
+          url.searchParams.set("timestamp", Date.now().toString());
+          if (result.user) {
+            url.searchParams.set("user_id", result.user.id || "");
+            url.searchParams.set(
+              "username",
+              result.user.username || formData.email
+            );
+          }
+          window.location.href = url.toString();
+        }, 1200);
       } else if (result.code === 409 && result.status === "error") {
         toast.error(result.message || en.register.messages.email_exists);
       } else {
@@ -317,5 +337,16 @@ export default function RegisterPage() {
       />
       <Footer />
     </>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <SearchParamsWrapper>
+      {(searchParams) => {
+        const callbackUrl = searchParams.get("callback") || "/";
+        return <RegisterForm callbackUrl={callbackUrl} />;
+      }}
+    </SearchParamsWrapper>
   );
 }

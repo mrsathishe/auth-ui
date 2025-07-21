@@ -41,8 +41,10 @@ export async function registerUser(formData: FormData) {
 }
 
 export async function loginUser(identifier: string, password: string) {
-  // Connect to backend GET endpoint with query params
-  return axios.get(`${API_BASE_URL}/login`, {
-    params: { identifier, password },
-  });
+  // Connect to backend POST endpoint with credentials in body
+  const payload = {
+    identifier,
+    password,
+  };
+  return axios.post(`${API_BASE_URL}/login`, payload);
 }
