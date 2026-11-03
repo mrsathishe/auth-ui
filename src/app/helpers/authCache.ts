@@ -22,6 +22,11 @@ export function storeAuthCache(authData: {
   expires_in?: number;
   username: string;
 }): void {
+  // Check if we're in a browser environment
+  if (typeof window === "undefined" || typeof localStorage === "undefined") {
+    return;
+  }
+
   const cacheData: AuthCacheData = {
     token: authData.token,
     token_type: authData.token_type || "bearer",
@@ -42,14 +47,22 @@ export function storeAuthCache(authData: {
  */
 export function getAuthCache(): AuthCacheData | null {
   try {
+    // Check if we're in a browser environment
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return null;
+    }
+
     const cached = localStorage.getItem(AUTH_CACHE_KEY);
     if (!cached) return null;
 
     const cacheData: AuthCacheData = JSON.parse(cached);
 
-    // Check if cache has expired
+    // Check if the cache has expired
+    const now = Date.now();
     const expirationTime = cacheData.timestamp + cacheData.expires_in * 1000;
-    if (Date.now() > expirationTime) {
+
+    if (now >= expirationTime) {
+      // Cache has expired, clear it
       clearAuthCache();
       return null;
     }
@@ -57,17 +70,23 @@ export function getAuthCache(): AuthCacheData | null {
     return cacheData;
   } catch (error) {
     console.warn("Failed to retrieve auth cache:", error);
+    // Clear corrupted cache data
     clearAuthCache();
     return null;
   }
 }
 
 /**
- * Check if user is currently authenticated (has valid cached auth)
+ * Check if user is currently authenticated based on cache
  */
 export function isAuthenticated(): boolean {
-  const cached = getAuthCache();
-  return cached !== null;
+  // Check if we're in a browser environment
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const cache = getAuthCache();
+  return cache !== null;
 }
 
 /**
@@ -75,6 +94,11 @@ export function isAuthenticated(): boolean {
  */
 export function clearAuthCache(): void {
   try {
+    // Check if we're in a browser environment
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return;
+    }
+
     localStorage.removeItem(AUTH_CACHE_KEY);
   } catch (error) {
     console.warn("Failed to clear auth cache:", error);
@@ -82,13 +106,51 @@ export function clearAuthCache(): void {
 }
 
 /**
- * Get remaining time in seconds before cache expires
+ * Get remaining time until cache expires (in milliseconds)
  */
 export function getCacheRemainingTime(): number {
-  const cached = getAuthCache();
-  if (!cached) return 0;
+  const cache = getAuthCache();
+  if (!cache) return 0;
 
-  const expirationTime = cached.timestamp + cached.expires_in * 1000;
-  const remaining = Math.max(0, expirationTime - Date.now());
-  return Math.floor(remaining / 1000);
+  const now = Date.now();
+  const expirationTime = cache.timestamp + cache.expires_in * 1000;
+  const remaining = expirationTime - now;
+
+  return Math.max(0, remaining);
+}
+
+/**
+ * Check if cache will expire within specified minutes
+ */
+export function isCacheExpiringSoon(minutes: number = 5): boolean {
+  const remainingTime = getCacheRemainingTime();
+  const thresholdTime = minutes * 60 * 1000; // Convert minutes to milliseconds
+
+  return remainingTime > 0 && remainingTime <= thresholdTime;
+}
+
+/**
+ * Extend cache expiration by specified duration (in seconds)
+ */
+export function extendCacheExpiration(
+  additionalSeconds: number = 1800
+): boolean {
+  const cache = getAuthCache();
+  if (!cache) return false;
+
+  const updatedCache: AuthCacheData = {
+    ...cache,
+    expires_in: cache.expires_in + additionalSeconds,
+  };
+
+  try {
+    if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+      localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(updatedCache));
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.warn("Failed to extend cache expiration:", error);
+    return false;
+  }
 }
